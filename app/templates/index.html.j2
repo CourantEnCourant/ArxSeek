@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>arXseek</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        h2 { color: #333; }
+        form { margin-bottom: 20px; }
+        textarea { width: 100%; height: 100px; }
+        input, textarea { margin-bottom: 10px; padding: 8px; }
+        button { background-color: #007bff; color: white; padding: 10px; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .result { border: 1px solid #ddd; padding: 10px; margin-top: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h2>arXseek</h2>
+    <form id="searchForm">
+        <label for="title">title: </label>
+        <input type="text" id="title" name="title" required><br>
+        
+        <label for="abstract">abstract: </label><br>
+        <textarea id="abstract" name="abstract" required></textarea><br>
+        
+        <button type="submit">Search</button>
+    </form>
+
+    <h3>Results: </h3>
+    <div id="results"></div>
+
+    <script>
+        document.getElementById("searchForm").onsubmit = async function(event) {
+            event.preventDefault();
+
+            const title = document.getElementById("title").value;
+            const abstract = document.getElementById("abstract").value;
+
+            const response = await fetch("/search", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, abstract })
+            });
+
+            const data = await response.json();
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = "";
+
+            data.results.forEach((paper, index) => {
+                const div = document.createElement("div");
+                div.classList.add("result");
+                div.innerHTML = `<strong>${index + 1}. ${paper.title}</strong> <br>
+                                 <em>Relevancy: ${paper.similarity.toFixed(4)}</em> <br>
+                                 <p>${paper.abstract}</p>`;
+                resultsDiv.appendChild(div);
+            });
+        };
+    </script>
+</body>
+</html>
