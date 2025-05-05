@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 router = APIRouter()
 
 accelerator = Accelerator()
-model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+model = SentenceTransformer("sentence-transformers/all-MiniLM-L12-v2")
 model.to(accelerator.device)
 
 def search_arxiv(title: str):
@@ -23,7 +23,12 @@ def search_arxiv(title: str):
     for entry in root.findall("{http://www.w3.org/2005/Atom}entry"):
         arxiv_title = entry.find("{http://www.w3.org/2005/Atom}title").text
         arxiv_abstract = entry.find("{http://www.w3.org/2005/Atom}summary").text.strip()
-        results.append({"title": arxiv_title, "abstract": arxiv_abstract})
+        arxiv_id = entry.find("{http://www.w3.org/2005/Atom}id").text
+        results.append({
+            "title": arxiv_title,
+            "abstract": arxiv_abstract,
+            "url": arxiv_id
+        })
     
     return results
 
