@@ -3,7 +3,7 @@ An app to help scholars find related articles about their current article using 
 
 ### By Cmd
 ```bash
-uvicorn main:app --reload
+uvicorn app.main:app --reload
 ```
 
 ### By Docker

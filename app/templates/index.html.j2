@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>arXivSeek</title>
     <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 </head>
 <body>
     <header>
@@ -24,7 +25,8 @@
         <div id="loading" style="display:none;">
             <div class="spinner"></div>
         </div>
-
+        
+        <div class="pagination" id="pagination"></div>
         <div id="results"></div>
         <div class="pagination" id="pagination"></div>
     </main>
@@ -32,45 +34,33 @@
     <script>
         document.getElementById("searchForm").onsubmit = async function(event) {
             event.preventDefault();
-
+        
             const title = document.getElementById("title").value;
             const abstract = document.getElementById("abstract").value;
-
+        
             document.getElementById("loading").style.display = "block";
-
+        
             const response = await fetch("/search", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ title, abstract })
             });
-
+        
             const data = await response.json();
             const resultsDiv = document.getElementById("results");
-            const paginationDiv = document.getElementById("pagination");
-
+            const paginationTop = document.querySelectorAll(".pagination")[0];
+            const paginationBottom = document.querySelectorAll(".pagination")[1];
+        
             resultsDiv.innerHTML = "";
-            paginationDiv.innerHTML = "";
-
+            paginationTop.innerHTML = "";
+            paginationBottom.innerHTML = "";
+        
             const perPage = 5;
             const totalPages = Math.ceil(data.results.length / perPage);
             let currentPage = 1;
-
-            function showPage(page) {
-                resultsDiv.innerHTML = "";
-                const start = (page - 1) * perPage;
-                const end = start + perPage;
-                const pageResults = data.results.slice(start, end);
-
-                pageResults.forEach((paper, index) => {
-                    const div = document.createElement("div");
-                    div.classList.add("result");
-                    div.innerHTML = `<strong>${start + index + 1}. ${paper.title}</strong><br>
-                                     <em>Relevancy: ${(paper.similarity * 100).toFixed(2)}%</em><br>
-                                     <p>${paper.abstract}</p>`;
-                    resultsDiv.appendChild(div);
-                });
-
-                paginationDiv.innerHTML = "";
+        
+            function renderPagination(container, page) {
+                container.innerHTML = "";
                 for (let i = 1; i <= totalPages; i++) {
                     const btn = document.createElement("button");
                     btn.textContent = i;
@@ -79,12 +69,31 @@
                         currentPage = i;
                         showPage(currentPage);
                     };
-                    paginationDiv.appendChild(btn);
+                    container.appendChild(btn);
                 }
             }
-
+        
+            function showPage(page) {
+                resultsDiv.innerHTML = "";
+                const start = (page - 1) * perPage;
+                const end = start + perPage;
+                const pageResults = data.results.slice(start, end);
+        
+                pageResults.forEach((paper, index) => {
+                    const div = document.createElement("div");
+                    div.classList.add("result");
+                    div.innerHTML = `<strong>${start + index + 1}. <a href="${paper.url}" target="_blank">${paper.title}</a></strong><br>
+                                     <em>Relevancy: ${(paper.similarity * 100).toFixed(2)}%</em><br>
+                                     <p>${paper.abstract}</p>`;
+                    resultsDiv.appendChild(div);
+                });
+        
+                renderPagination(paginationTop, page);
+                renderPagination(paginationBottom, page);
+            }
+        
             document.getElementById("loading").style.display = "none";
-
+        
             if (data.results.length > 0) showPage(currentPage);
         };
     </script>
